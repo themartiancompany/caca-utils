@@ -25,6 +25,8 @@ _requirements() {
   _check_cmd \
     'cacaview' \
     'libcaca'
+  _check_cmd \
+    'sdotool'
 }
 
 _get_conf_dir_path() {
