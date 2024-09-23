@@ -48,24 +48,27 @@ _close_keyboard() {
 
 _caca_view_quit() {
   sleep \
-    4
+    10
   sdotool \
     key \
       q
 }
 
-_android_caca_write() {
+_android_cacawrite() {
   local \
     _in="${1}" \
     _out="${2}"
-  _close_keyboard
-  cacaview \
-    "${_in}" > \
-    "${_out}" & \
-  _caca_view_quit 
+  (sdotool key back & ( sleep 10 && sdotool key q ) ) & ( sleep 5 && cacaview "${_in}" > ${_out} )
+  # _close_keyboard
+  # ( ( echo \
+  #       q | \
+  #       cacaview \
+  #         "${_in}") > \
+  #       "${_out}")
+  # _caca_view_quit
 }
 
-_caca_view() {
+_cacawrite() {
   local \
     _in="${1}" \
     _out="${2}" \
@@ -74,7 +77,7 @@ _caca_view() {
     uname \
       -o)"
   if [[ "${_os}" == "Android" ]]; then
-    "_${_os}_caca_write" \
+    "_android_cacawrite" \
       "${_in}" \
       "${_out}"
   fi
@@ -86,9 +89,8 @@ _out_file_auto_detect(){
     _in
   _in="$( \
     _get \
-      "input" \
-      "file" 2&>/dev/null || \
-      true)"
+      "in" \
+      "file")"
   if [[ "${_in}" != "" ]]; then
     _out="${_in}.txt"
   fi
