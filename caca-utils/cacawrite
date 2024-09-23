@@ -17,8 +17,6 @@ _global_variables() {
   write_date=""
   in_file=""
   out_file=""
-  out_dir=""
-  work_dir=""
   color=""
   quiet=""
 }
@@ -40,32 +38,6 @@ _get_conf_dir_path() {
     "${_dir}"
 }
 
-_out_file_auto_detect() {
-  echo \
-    "$(_get \
-         "in" \
-         "file").txt"
-}
-
-_hardhat_init() {
-  local \
-    _oldpwd
-  _oldpwd="$( \
-    pwd)"
-  cd \
-    "${_project_dir}"
-  echo \
-    "3\n" | \
-    npx \
-      hardhat \
-        init
-  rm \
-    -rf \
-    "contracts/Lock.sol"
-  cd \
-    "${_oldpwd}"
-}
-
 _close_keyboard() {
   sdotool \
     key \
@@ -81,6 +53,9 @@ _caca_view_quit() {
 }
 
 _android_caca_write() {
+  local \
+    _in="${1}" \
+    _out="${2}"
   _close_keyboard
   cacaview \
     "${_in}" > \
@@ -90,50 +65,44 @@ _android_caca_write() {
 
 _caca_view() {
   local \
-    _in_file="${1}" \
-    _out_file="${2}" \
+    _in="${1}" \
+    _out="${2}" \
     _os
   _os="$( \
     uname \
       -o)"
   if [[ "${_os}" == "Android" ]]; then
-    "_${_os}_caca_write"
+    "_${_os}_caca_write" \
+      "${_in}" \
+      "${_out}"
   fi
 }
 
-_out_dir_auto_detect(){
+_out_file_auto_detect(){
   local \
-    _contract_dir
-  if [[ "$(_get "target" "contracts")" != "" ]]; then
-    _contract_dir="$( \
-      dirname \
-       "${target_contracts}")"
-  else
-    _contract_dir="$( \
-      pwd)"
+    _out='' \
+    _in
+  _in="$( \
+    _get \
+      "input" \
+      "file" 2&>/dev/null || \
+      true)"
+  if [[ "${_in}" != "" ]]; then
+    _out="${_in}.txt"
   fi
   echo \
-    "${_contract_dir}"
+    "${_out}"
 }
 
 _set_overrides() {
   _set_override \
-    "build" \
+    "write" \
     "date" \
     "$(_get_date_human)"
   _set_override \
-    "compiler" \
-    "backend" \
-    "hardhat"
-  _set_override \
-    "work" \
-    "dir" \
-    "$(mktemp \
-         -d)"
-  _set_override \
     "out" \
-    "dir" \
-    "$(_out_dir_auto_detect)"
+    "file" \
+    "$(_out_file_auto_detect)"
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -158,20 +127,15 @@ _usage() {
       -d '' \
       _usage_text << \
         ENDUSAGETEXT || true
-Solidity compiler.
+
+Converts an image into text.
 
 Usage:
   $(_get "app" "name")
     [options]
-    [target_contract]
+    <in_file>
+    (<out_file>)
   options:
-     -b <backend>         Compiler backend
-                          Default: '$(_get "compiler" "backend")'
-     -o <out_dir>         Output directory
-                          Default: '$(_get "out" "dir")'
-     -w <work_dir>        Work directory
-                          Default: '$(_get "work" "dir")'
-
      -h                   This message.
      -c                   Enable color output
      -v                   Enable verbose output
@@ -186,11 +150,9 @@ ENDUSAGETEXT
 # Shows configuration options.
 _show_config() {
   _msg_info "${app_name} configuration"
-  _msg_info "               Build date:   $(_get "build" "date")"
-  _msg_info "         Compiler backend:   $(_get "compiler" "backend")"
-  _msg_info "                  Out dir:   $(_get "out" "dir")"
-  _msg_info "                 Work dir:   $(_get "work" "dir")"
-  _msg_info "         Target contracts:   $(_get "target" "contracts")"
+  _msg_info "               Write date:   $(_get "write" "date")"
+  _msg_info "                  In file:   $(_get "in" "file")"
+  _msg_info "                 Out file:   $(_get "out" "file")"
 }
 
 _globals
@@ -199,13 +161,10 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'b:o:w:cvh?' \
+    'cvh?' \
     arg; do
   case \
     "${arg}" in
-    b) override_compiler_backend="${OPTARG}" ;;
-    o) override_out_dir="${OPTARG}" ;;
-    w) override_work_dir="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -224,6 +183,14 @@ shift \
   $(( \
     OPTIND - 1 \
   ))
+if (( 0 == $# )); then
+  _msg_error \
+    "no input file" \
+    0
+  _set_overrides
+  _usage \
+    1
+fi
 if (( 0 < $# )); then
   _set \
     "in" \
@@ -235,14 +202,6 @@ if (( 1 < $# )); then
     "out" \
     "file" \
     "${2}"
-fi
-if [[ "${in_file}" ==  "" ]]; then
-  _msg_error \
-    "no input file" \
-    0
-  _set_overrides
-  _usage \
-    1
 fi
 _set_overrides
 _config_user_init \
