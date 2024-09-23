@@ -220,7 +220,7 @@ app_opts=(
        "out" \
        "file")"
 )
-_caca_write \
+_cacawrite \
   "${app_opts[@]}"
 
 # vim:set sw=2 sts=-1 et:
