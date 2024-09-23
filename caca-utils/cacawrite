@@ -59,6 +59,16 @@ _android_cacawrite() {
     _in="${1}" \
     _out="${2}"
   (sdotool key back & ( sleep 10 && sdotool key q ) ) & ( sleep 5 && cacaview "${_in}" > ${_out} )
+  _pic="$( \
+    cat \
+      "${_out}" | \
+      sed \
+        "s/cacaview//g")"
+  _msg_info \
+    "pic size: ${#_pic}"
+  echo \
+    "${_pic:30}" > \
+    "${_out}"
   # _close_keyboard
   # ( ( echo \
   #       q | \
@@ -199,7 +209,8 @@ if (( 0 < $# )); then
   _set \
     "in" \
     "file" \
-    "${1}"
+    "$(realpath \
+         "${1}")"
 fi
 if (( 1 < $# )); then
   _set \
