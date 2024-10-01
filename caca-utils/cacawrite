@@ -64,14 +64,17 @@ _encode() {
     cat \
       "${_in}" | \
       sed \
-        "s/cacaview//g")"
+        "s/cacaview//g")" || \
+    true
   _msg_info \
     "pic size: ${#_pic}"
   _msg_info \
     "out file: ${_out}"
-  if [ ! -e "${_out}" ]; then
+  if [ ! -e "${_out}" ] && \
+     [[ "${_os}" == "Android" ]]; then
     touch \
-      "${_out}"
+      "${_out}" || \
+    true
   fi
   echo \
     "${_pic:30}" > \
@@ -108,8 +111,9 @@ _linux_cacawrite() {
   timeout \
     5 \
     cacaview \
-      "${_in}" 1&> \
-    "${_tmp}"
+      "${_in}" 2>/dev/null 1&> \
+    "${_tmp}" || 
+    true
   _encode \
     "${_tmp}"
 }
