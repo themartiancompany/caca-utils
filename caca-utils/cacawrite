@@ -17,6 +17,7 @@ _global_variables() {
   write_date=""
   in_file=""
   out_file=""
+  work_dir=""
   color=""
   quiet=""
 }
@@ -57,28 +58,36 @@ _caca_view_quit() {
 _encode() {
   local \
     _in="${1}" \
-    _out="${2}" \
     _pic
+  if [[ "${_out_file}" == "" ]]; then
+    _msg_error \
+      "why" \
+      1
+  fi
   _pic="$( \
-    cat \
+    echo \
       "${_in}" | \
       sed \
-        "s/cacaview//g")"
+        "s/cacaview//g")"  || \
+    true
   _msg_info \
-    "pic size: ${#_pic}"
-  echo \
+    "pic out path: ${_out_file}"
+  _msg_info \
+    "pic size: ${#_pic}" || 
+    true
+  printf "%s" \
     "${_pic:30}" > \
-    "${_out}"
+    "${_out_file}"
 }
 
 _android_cacawrite() {
   local \
     _in="${1}" \
-    _out="${2}" \
+    _out_file="${2}" \
     _tmp
   _tmp="$( \
-    mktemp \
-      --suffix=".txt")"
+    maketemp \
+      -d)/pic.txt"
   ( sdotool \
      key \
        back & \
@@ -92,40 +101,46 @@ _android_cacawrite() {
       cacaview \
       "${_in}" > \
       "${_tmp}" )
+  _content="$( \
+    cat \
+      "${_tmp}")"
   _encode \
-    "${_tmp}" \ 
-    "${_out}"
-  # _close_keyboard
-  # ( ( echo \
-  #       q | \
-  #       cacaview \
-  #         "${_in}") > \
-  #       "${_out}")
-  # _caca_view_quit
+    "${_tmp}"
 }
 
 _linux_cacawrite() {
   local \
     _in="${1}" \
-    _out="${2}" \
-    _tmp
+    _out_file="${2}" \
+    _work_dir="${3}" \
+    _tmp \
+    _content
   _tmp="$( \
-    mktemp \
-      --suffix=".txt")"
-  timeout \
-    5 \
-    cacaview \
-      "${_in}" 1&> \
-    "${_tmp}"
+    _get \
+      "work" \
+      "dir")/pic.txt"
+  _msg_info \
+    "converting ${_in} in ${_out_file}"
+  echo \
+   "$( ( sleep \
+           5 && \
+           echo \
+             "q" ) )" | \
+     cacaview \
+       "${_in}" > \
+       "${_tmp}"
+  _content="$( \
+    cat \
+      "${_tmp}")"
   _encode \
-    "${_tmp}" \ 
-    "${_out}"
+    "${_content}" 
 }
 
 _cacawrite() {
   local \
     _in="${1}" \
     _out="${2}" \
+    _work_dir="${3}" \
     _os
   _os="$( \
     uname \
@@ -137,8 +152,11 @@ _cacawrite() {
   elif [[ "${_os}" == "GNU/Linux" ]]; then
     "_linux_cacawrite" \
       "${_in}" \
-      "${_out}"
+      "${_out}" \
+      "${work_dir}"
   fi
+  return \
+    0
 }
 
 _out_file_auto_detect(){
@@ -165,6 +183,11 @@ _set_overrides() {
     "out" \
     "file" \
     "$(_out_file_auto_detect)"
+  _set_override \
+    "work" \
+    "dir" \
+    "$(mktemp \
+         -d)"
   if [[ -v override_quiet ]]; then
     quiet="${override_quiet}"
   elif [[ -z "${quiet}" ]]; then
@@ -198,6 +221,8 @@ Usage:
     <in_file>
     (<out_file>)
   options:
+     -w <work_dir>        Working directory.
+
      -h                   This message.
      -c                   Enable color output
      -v                   Enable verbose output
@@ -213,6 +238,7 @@ ENDUSAGETEXT
 _show_config() {
   _msg_info "${app_name} configuration"
   _msg_info "               Write date:   $(_get "write" "date")"
+  _msg_info "           Work directory:   $(_get "work" "dir")"
   _msg_info "                  In file:   $(_get "in" "file")"
   _msg_info "                 Out file:   $(_get "out" "file")"
 }
@@ -223,10 +249,11 @@ _requirements
 # shellcheck disable=SC2034
 while \
   getopts \
-    'cvh?' \
+    'w:cvh?' \
     arg; do
   case \
     "${arg}" in
+    w) override_work_dir="${OPTARG}" ;;
     c) override_color="y" ;;
     v) override_quiet="n" ;;
     h|?) _set_overrides && \
@@ -280,6 +307,10 @@ app_opts=(
   "$(_get \
        "out" \
        "file")"
+  "$(_get \
+       "work" \
+       "dir")"
+
 )
 _cacawrite \
   "${app_opts[@]}"
