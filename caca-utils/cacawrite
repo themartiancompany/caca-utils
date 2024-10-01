@@ -74,34 +74,21 @@ _encode() {
 _android_cacawrite() {
   local \
     _in="${1}" \
-    _out="${2}" \
+    _out_file="${2}" \
     _tmp
   _tmp="$( \
     mktemp \
       --suffix=".txt")"
-  ( sdotool \
-     key \
-       back & \
-   ( sleep \
-       10 && \
-       sdotool \
-         key \
-           q ) ) & \
-  ( sleep \
-      5 && \
-      cacaview \
-      "${_in}" > \
-      "${_tmp}" )
+  _close_keyboard
+  _caca_view_quit & \
+  cacaview \
+    "${_in}" > \
+    "${_tmp}"
+  _msg_info \
+    "out file '${_out_file}', tmp file ${_tmp}"
   _encode \
     "${_tmp}" \ 
-    "${_out}"
-  # _close_keyboard
-  # ( ( echo \
-  #       q | \
-  #       cacaview \
-  #         "${_in}") > \
-  #       "${_out}")
-  # _caca_view_quit
+    "${_out_file}"
 }
 
 _linux_cacawrite() {
