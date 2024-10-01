@@ -54,20 +54,46 @@ _caca_view_quit() {
       q
 }
 
-_android_cacawrite() {
+_encode() {
   local \
     _in="${1}" \
-    _out="${2}"
-  (sdotool key back & ( sleep 10 && sdotool key q ) ) & ( sleep 5 && cacaview "${_in}" > ${_out} )
+    _out="${2}" \
+    _pic
   _pic="$( \
     cat \
-      "${_out}" | \
+      "${_in}" | \
       sed \
         "s/cacaview//g")"
   _msg_info \
     "pic size: ${#_pic}"
   echo \
     "${_pic:30}" > \
+    "${_out}"
+}
+
+_android_cacawrite() {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _tmp
+  _tmp="$( \
+    mktemp \
+      --suffix=".txt")"
+  ( sdotool \
+     key \
+       back & \
+   ( sleep \
+       10 && \
+       sdotool \
+         key \
+           q ) ) & \
+  ( sleep \
+      5 && \
+      cacaview \
+      "${_in}" > \
+      "${_tmp}" )
+  _encode \
+    "${_tmp}" \ 
     "${_out}"
   # _close_keyboard
   # ( ( echo \
@@ -76,6 +102,24 @@ _android_cacawrite() {
   #         "${_in}") > \
   #       "${_out}")
   # _caca_view_quit
+}
+
+_linux_cacawrite() {
+  local \
+    _in="${1}" \
+    _out="${2}" \
+    _tmp
+  _tmp="$( \
+    mktemp \
+      --suffix=".txt")"
+  timeout \
+    5 \
+    cacaview \
+      "${_in}" 1&> \
+    "${_tmp}"
+  _encode \
+    "${_tmp}" \ 
+    "${_out}"
 }
 
 _cacawrite() {
@@ -88,6 +132,10 @@ _cacawrite() {
       -o)"
   if [[ "${_os}" == "Android" ]]; then
     "_android_cacawrite" \
+      "${_in}" \
+      "${_out}"
+  elif [[ "${_os}" == "GNU/Linux" ]]; then
+    "_linux_cacawrite" \
       "${_in}" \
       "${_out}"
   fi

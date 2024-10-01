@@ -1,4 +1,4 @@
-# Caca utils
+# Caca Utils
 
 ```bash
   cacawrite
