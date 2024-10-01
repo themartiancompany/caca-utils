@@ -57,8 +57,9 @@ _caca_view_quit() {
 _encode() {
   local \
     _in="${1}" \
-    _out="${2}" \
     _pic
+  _msg_info \
+    "in file: ${_in}"
   _pic="$( \
     cat \
       "${_in}" | \
@@ -66,6 +67,12 @@ _encode() {
         "s/cacaview//g")"
   _msg_info \
     "pic size: ${#_pic}"
+  _msg_info \
+    "out file: ${_out}"
+  if [ ! -e "${_out}" ]; then
+    touch \
+      "${_out}"
+  fi
   echo \
     "${_pic:30}" > \
     "${_out}"
@@ -74,7 +81,7 @@ _encode() {
 _android_cacawrite() {
   local \
     _in="${1}" \
-    _out_file="${2}" \
+    _out="${2}" \
     _tmp
   _tmp="$( \
     mktemp \
@@ -85,10 +92,9 @@ _android_cacawrite() {
     "${_in}" > \
     "${_tmp}"
   _msg_info \
-    "out file '${_out_file}', tmp file ${_tmp}"
+    "out file '${_out}', tmp file ${_tmp}"
   _encode \
-    "${_tmp}" \ 
-    "${_out_file}"
+    "${_tmp}"
 }
 
 _linux_cacawrite() {
@@ -105,8 +111,7 @@ _linux_cacawrite() {
       "${_in}" 1&> \
     "${_tmp}"
   _encode \
-    "${_tmp}" \ 
-    "${_out}"
+    "${_tmp}"
 }
 
 _cacawrite() {
