@@ -1,7 +1,7 @@
 [comment]: <> (SPDX-License-Identifier: AGPL-3.0)
 
 [comment]: <> (-------------------------------------------------------------)
-[comment]: <> (Copyright © 2024, 2025  Pellegrino Prevete)
+[comment]: <> (Copyright © 2024, 2025, 2026  Pellegrino Prevete)
 [comment]: <> (All rights reserved)
 [comment]: <> (-------------------------------------------------------------)
 
@@ -33,8 +33,8 @@ library.
 
 ```bash
   cacawrite
-    <in_file>
-    <out_file>
+    <in-file>
+    <out-file>
 ```
 
 On Android it relies on the
@@ -43,6 +43,20 @@ On Android it relies on the
 input automation program in order
 to hide the software keyboard while
 saving the pictures.
+
+This program is a dependency for
+[Media Tools](
+  https://github.com/themartiancompany/media-tools)
+and
+[Picture Viewer](
+  https://github.com/themartiancompany/picture-viewer),
+and as a consequence, of the undeletable, decentralized
+Twitter.
+
+Being the undeletable Twitter a core component of
+[DogeOS](
+  https://github.com/themartiancompany/dogeos),
+this program is too.
 
 ## Installation
 
